@@ -1,3 +1,17 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>장비 예약 보드</title>
+<meta name="theme-color" content="#2D6E5E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="장비예약">
+<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%20%22%EC%9E%A5%EB%B9%84%20%EC%98%88%EC%95%BD%20%EB%B3%B4%EB%93%9C%22%2C%20%22short_name%22%3A%20%22%EC%9E%A5%EB%B9%84%EC%98%88%EC%95%BD%22%2C%20%22start_url%22%3A%20%22.%22%2C%20%22scope%22%3A%20%22.%22%2C%20%22display%22%3A%20%22standalone%22%2C%20%22background_color%22%3A%20%22%23F5F4F0%22%2C%20%22theme_color%22%3A%20%22%232D6E5E%22%2C%20%22icons%22%3A%20%5B%7B%22src%22%3A%20%22data%3Aimage/svg%2Bxml%2C%253Csvg%2520xmlns%253D%2527http%253A//www.w3.org/2000/svg%2527%2520viewBox%253D%25270%25200%2520100%2520100%2527%253E%253Crect%2520width%253D%2527100%2527%2520height%253D%2527100%2527%2520rx%253D%252720%2527%2520fill%253D%2527%25232D6E5E%2527/%253E%253Ctext%2520x%253D%252750%2527%2520y%253D%252768%2527%2520font-size%253D%252754%2527%2520text-anchor%253D%2527middle%2527%253E%25F0%259F%2594%25A7%253C/text%253E%253C/svg%253E%22%2C%20%22sizes%22%3A%20%22192x192%22%2C%20%22type%22%3A%20%22image/svg%2Bxml%22%2C%20%22purpose%22%3A%20%22any%22%7D%2C%20%7B%22src%22%3A%20%22data%3Aimage/svg%2Bxml%2C%253Csvg%2520xmlns%253D%2527http%253A//www.w3.org/2000/svg%2527%2520viewBox%253D%25270%25200%2520100%2520100%2527%253E%253Crect%2520width%253D%2527100%2527%2520height%253D%2527100%2527%2520rx%253D%252720%2527%2520fill%253D%2527%25232D6E5E%2527/%253E%253Ctext%2520x%253D%252750%2527%2520y%253D%252768%2527%2520font-size%253D%252754%2527%2520text-anchor%253D%2527middle%2527%253E%25F0%259F%2594%25A7%253C/text%253E%253C/svg%253E%22%2C%20%22sizes%22%3A%20%22512x512%22%2C%20%22type%22%3A%20%22image/svg%2Bxml%22%2C%20%22purpose%22%3A%20%22any%22%7D%5D%7D">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%20100%20100%27%3E%3Crect%20width%3D%27100%27%20height%3D%27100%27%20rx%3D%2720%27%20fill%3D%27%232D6E5E%27/%3E%3Ctext%20x%3D%2750%27%20y%3D%2768%27%20font-size%3D%2754%27%20text-anchor%3D%27middle%27%3E%F0%9F%94%A7%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%20100%20100%27%3E%3Crect%20width%3D%27100%27%20height%3D%27100%27%20rx%3D%2720%27%20fill%3D%27%232D6E5E%27/%3E%3Ctext%20x%3D%2750%27%20y%3D%2768%27%20font-size%3D%2754%27%20text-anchor%3D%27middle%27%3E%F0%9F%94%A7%3C/text%3E%3C/svg%3E">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
@@ -308,8 +322,45 @@ td.eqbk-week-cell.eqbk-today { background: var(--accent-soft); }
 .eqbk-week-chip-time { font-size: 10px; font-family: 'IBM Plex Mono', monospace; opacity: 0.9; margin-top: 1px; }
 .eqbk-week-chip-status { font-size: 9px; margin-top: 3px; font-weight: 700; letter-spacing: 0.02em; }
 
-</style>
+.eqbk-status-maintenance { background: #FBEBD9; color: #B5541D; }
+.eqbk-status-broken { background: #F4DEDE; color: var(--danger); }
+.eqbk-eq-tag-btn { cursor: pointer; }
+.eqbk-eq-tag-btn:hover { text-decoration: underline; }
+td.eqbk-cell.eqbk-cell-unavailable, td.eqbk-week-cell.eqbk-cell-unavailable {
+  background: repeating-linear-gradient(45deg, #F2ECE6, #F2ECE6 6px, #E9DFD6 6px, #E9DFD6 12px);
+}
+.eqbk-edit-btn {
+  border: 1px solid var(--accent) !important;
+  color: var(--accent) !important;
+  border-radius: 6px;
+  padding: 3px 8px !important;
+  font-size: 11px !important;
+}
+.eqbk-checkbox-row {
+  display: flex; align-items: center; gap: 7px;
+  margin: 12px 0 0; font-size: 12.5px; font-weight: 600; color: var(--text);
+}
+.eqbk-checkbox-row input { width: auto; }
+.eqbk-status-choice-group { display: flex; gap: 8px; margin-top: 4px; }
+.eqbk-status-choice {
+  flex: 1; padding: 9px 6px; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--panel); font-size: 12px; font-weight: 600; cursor: pointer; text-align: center;
+}
+.eqbk-status-choice.eqbk-status-choice-active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.eqbk-stats { margin-top: 18px; }
+.eqbk-stats h2 { font-size: 14px; margin: 0 0 8px; }
+.eqbk-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 640px) { .eqbk-stats-grid { grid-template-columns: 1fr; } }
+.eqbk-stats-card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+.eqbk-stats-card h3 { font-size: 12px; margin: 0 0 8px; color: var(--muted); font-weight: 700; }
+.eqbk-stats-row { display: flex; justify-content: space-between; font-size: 12.5px; padding: 5px 0; border-bottom: 1px solid var(--border); }
+.eqbk-stats-row:last-child { border-bottom: none; }
+.eqbk-stats-val { font-family: 'IBM Plex Mono', monospace; color: var(--muted); }
+.eqbk-hint { font-size: 11px; color: var(--muted); }
 
+</style>
+</head>
+<body>
 <div id="eqbk-app" class="eqbk-root"><div class="eqbk-empty">불러오는 중...</div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-app-compat.min.js"></script>
@@ -365,6 +416,29 @@ const firebaseConfig = {
   function pad(n){ return n < 10 ? '0'+n : ''+n; }
   function dateStr(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
   function toLocalInput(d){ return dateStr(d) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+
+  function eqStatusLabel(eq){
+    if (!eq.status || eq.status === 'ok') return null;
+    return eq.status === 'maintenance' ? '🔧 점검중' : '⛔ 고장';
+  }
+
+  function computeMonthStats(year, month){
+    const monthStart = new Date(year, month, 1).getTime();
+    const monthEnd = new Date(year, month+1, 1).getTime();
+    const perEquipment = {};
+    const perPerson = {};
+    reservations.forEach(r => {
+      const s = Math.max(new Date(r.start).getTime(), monthStart);
+      const e = Math.min(new Date(r.end).getTime(), monthEnd);
+      if (e <= s) return;
+      const hours = (e - s) / 3600000;
+      if (!perEquipment[r.equipmentId]) perEquipment[r.equipmentId] = { hours: 0, count: 0 };
+      perEquipment[r.equipmentId].hours += hours;
+      perEquipment[r.equipmentId].count += 1;
+      perPerson[r.person] = (perPerson[r.person] || 0) + hours;
+    });
+    return { perEquipment, perPerson };
+  }
 
   async function initFirebaseData(){
     const snap = await eqRef.once('value');
@@ -446,7 +520,10 @@ const firebaseConfig = {
     html += '</tr></thead><tbody>';
 
     equipment.forEach(eq => {
-      html += '<tr><td class="eqbk-eqname"><span class="eqbk-eq-tag">'+eq.tag+'</span><span class="eqbk-eq-name" data-eqid="'+eq.id+'" title="눌러서 이름 수정">'+eq.name+'</span></td>';
+      const badge = eqStatusLabel(eq);
+      const unavailable = !!badge;
+      html += '<tr><td class="eqbk-eqname"><span class="eqbk-eq-tag eqbk-eq-tag-btn" data-eqid="'+eq.id+'" title="눌러서 장비 상태 변경">'+eq.tag+'</span><span class="eqbk-eq-name" data-eqid="'+eq.id+'" title="눌러서 이름 수정">'+eq.name+'</span>'
+        + (badge ? ' <span class="eqbk-status-badge eqbk-status-'+eq.status+'">'+badge+'</span>' : '') + '</td>';
       for (let d=1; d<=daysInMonth; d++){
         const dt = new Date(year, month, d);
         const isToday = isThisMonth && d === today.getDate();
@@ -468,7 +545,7 @@ const firebaseConfig = {
           });
           if (list.length > 3) inner += '<span class="eqbk-badge">'+list.length+'</span>';
         }
-        html += '<td class="eqbk-cell '+(isToday?'eqbk-today':'')+'" data-eqid="'+eq.id+'" data-date="'+dateStr(dt)+'">'+inner+'</td>';
+        html += '<td class="eqbk-cell '+(isToday?'eqbk-today':'')+(unavailable?' eqbk-cell-unavailable':'')+'" data-eqid="'+eq.id+'" data-date="'+dateStr(dt)+'">'+inner+'</td>';
       }
       html += '</tr>';
     });
@@ -491,7 +568,10 @@ const firebaseConfig = {
     html += '</tr></thead><tbody>';
 
     equipment.forEach(eq => {
-      html += '<tr><td class="eqbk-eqname"><span class="eqbk-eq-tag">'+eq.tag+'</span><span class="eqbk-eq-name" data-eqid="'+eq.id+'" title="눌러서 이름 수정">'+eq.name+'</span></td>';
+      const badge = eqStatusLabel(eq);
+      const unavailable = !!badge;
+      html += '<tr><td class="eqbk-eqname"><span class="eqbk-eq-tag eqbk-eq-tag-btn" data-eqid="'+eq.id+'" title="눌러서 장비 상태 변경">'+eq.tag+'</span><span class="eqbk-eq-name" data-eqid="'+eq.id+'" title="눌러서 이름 수정">'+eq.name+'</span>'
+        + (badge ? ' <span class="eqbk-status-badge eqbk-status-'+eq.status+'">'+badge+'</span>' : '') + '</td>';
       days.forEach(dt => {
         const isToday = dt.toDateString() === today.toDateString();
         const dayStart = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 0,0,0);
@@ -509,11 +589,11 @@ const firebaseConfig = {
           const textColor = st === 'ended' ? 'var(--text)' : '#fff';
           const opacity = st === 'scheduled' ? 0.7 : (st === 'ended' ? 0.85 : 1);
           inner += '<div class="eqbk-week-chip" style="background:'+bg+';color:'+textColor+';opacity:'+opacity+'">'
-            + '<div class="eqbk-week-chip-person">'+r.person+'</div>'
+            + '<div class="eqbk-week-chip-person">'+r.person+(r.seriesId ? ' 🔁' : '')+'</div>'
             + '<div class="eqbk-week-chip-time">'+timeLabel+'</div>'
             + '<div class="eqbk-week-chip-status">'+statusLabel(st)+'</div></div>';
         });
-        html += '<td class="eqbk-week-cell '+(isToday?'eqbk-today':'')+'" data-eqid="'+eq.id+'" data-date="'+dateStr(dt)+'">'+inner+'</td>';
+        html += '<td class="eqbk-week-cell '+(isToday?'eqbk-today':'')+(unavailable?' eqbk-cell-unavailable':'')+'" data-eqid="'+eq.id+'" data-date="'+dateStr(dt)+'">'+inner+'</td>';
       });
       html += '</tr>';
     });
@@ -587,6 +667,27 @@ const firebaseConfig = {
     }
     html += '</div>';
 
+    // usage stats for the month currently in view
+    const statsYear = viewMode === 'month' ? year : weekAnchor.getFullYear();
+    const statsMonth = viewMode === 'month' ? month : weekAnchor.getMonth();
+    const stats = computeMonthStats(statsYear, statsMonth);
+    const eqStatsSorted = equipment
+      .map(eq => ({ eq, data: stats.perEquipment[eq.id] || { hours: 0, count: 0 } }))
+      .sort((a,b) => b.data.hours - a.data.hours);
+    const personStatsSorted = Object.entries(stats.perPerson).sort((a,b) => b[1]-a[1]).slice(0, 5);
+    html += '<div class="eqbk-stats"><h2>📊 '+statsYear+'년 '+(statsMonth+1)+'월 사용 통계</h2><div class="eqbk-stats-grid">';
+    html += '<div class="eqbk-stats-card"><h3>장비별 사용시간</h3>';
+    eqStatsSorted.forEach(({eq, data}) => {
+      html += '<div class="eqbk-stats-row"><span>'+eq.name+'</span><span class="eqbk-stats-val">'+data.hours.toFixed(1)+'시간 · '+data.count+'건</span></div>';
+    });
+    html += '</div>';
+    html += '<div class="eqbk-stats-card"><h3>사용자별 사용시간 (상위 5명)</h3>';
+    if (personStatsSorted.length === 0) html += '<div class="eqbk-empty">아직 데이터가 없어요</div>';
+    personStatsSorted.forEach(([name, hours]) => {
+      html += '<div class="eqbk-stats-row"><span>'+name+'</span><span class="eqbk-stats-val">'+hours.toFixed(1)+'시간</span></div>';
+    });
+    html += '</div></div></div>';
+
     html += '<button class="eqbk-fab" id="eqbk-fab" title="예약 추가">+</button>';
 
     if (modalState) html += renderModal();
@@ -596,11 +697,16 @@ const firebaseConfig = {
   }
 
   function renderModal(){
+    if (modalState.mode === 'equipmentStatus') return renderEquipmentStatusModal();
+
     const peopleOptions = people.map(p=>'<option value="'+p+'">').join('');
-    let defaultEq = modalState.equipmentId || (equipment[0] && equipment[0].id);
+    const editingRes = modalState.editingId ? reservations.find(r=>r.id===modalState.editingId) : null;
+    let defaultEq = (editingRes && editingRes.equipmentId) || modalState.equipmentId || (equipment[0] && equipment[0].id);
     let defaultDate = modalState.dateStr || dateStr(new Date());
-    let startVal = defaultDate + 'T09:00';
-    let endVal = defaultDate + 'T18:00';
+    let startVal = editingRes ? editingRes.start : (defaultDate + 'T09:00');
+    let endVal = editingRes ? editingRes.end : (defaultDate + 'T18:00');
+    let personVal = editingRes ? editingRes.person : '';
+    let noteVal = editingRes ? (editingRes.note || '') : '';
 
     let html = '<div class="eqbk-overlay" id="eqbk-overlay"><div class="eqbk-modal">';
     html += '<button class="eqbk-modal-close" id="eqbk-modal-close">✕</button>';
@@ -615,27 +721,57 @@ const firebaseConfig = {
         const st = getStatus(r);
         html += '<div class="eqbk-existing-item">'
           + '<span class="eqbk-existing-main"><span class="eqbk-dot" style="background:'+colorForPerson(r.person)+';display:inline-block"></span>'
-          + r.person+' · '+fmtRange(r)+(r.note?(' · '+r.note):'')
+          + r.person+' · '+fmtRange(r)+(r.note?(' · '+r.note):'')+(r.seriesId?' · 🔁 반복':'')
           + '<span class="eqbk-status-badge eqbk-status-'+st+'">'+statusLabel(st)+'</span></span>'
           + '<span class="eqbk-existing-actions">'
+          + '<button class="eqbk-edit-btn" data-edit="'+r.id+'">수정</button>'
           + (st !== 'ended' ? '<button class="eqbk-end-btn" data-end="'+r.id+'">사용 종료</button>' : '')
           + '<button data-delete="'+r.id+'">삭제</button></span></div>';
       });
       html += '</div>';
     }
 
-    html += '<h2 style="margin-top:16px">'+(modalState.mode==='day' ? '새 예약 추가' : '예약 추가')+'</h2>';
+    html += '<h2 style="margin-top:16px">'+(editingRes ? '예약 수정' : (modalState.mode==='day' ? '새 예약 추가' : '예약 추가'))+'</h2>';
     html += '<label>장비</label><select id="eqbk-f-equipment">';
-    equipment.forEach(eq => html += '<option value="'+eq.id+'" '+(eq.id===defaultEq?'selected':'')+'>'+eq.name+'</option>');
+    equipment.forEach(eq => {
+      const badge = eqStatusLabel(eq);
+      html += '<option value="'+eq.id+'" '+(eq.id===defaultEq?'selected':'')+'>'+eq.name+(badge?' ('+badge+')':'')+'</option>';
+    });
     html += '</select>';
-    html += '<label>이름</label><input id="eqbk-f-person" list="eqbk-people-list" placeholder="예: 김민수">';
+    html += '<label>이름</label><input id="eqbk-f-person" list="eqbk-people-list" placeholder="예: 김민수" value="'+personVal+'">';
     html += '<datalist id="eqbk-people-list">'+peopleOptions+'</datalist>';
     html += '<label>시작</label><input type="datetime-local" id="eqbk-f-start" value="'+startVal+'">';
     html += '<label>종료</label><input type="datetime-local" id="eqbk-f-end" value="'+endVal+'">';
-    html += '<label>메모 (선택)</label><input id="eqbk-f-note" placeholder="예: 실험 A용">';
+    html += '<label>메모 (선택)</label><input id="eqbk-f-note" placeholder="예: 실험 A용" value="'+noteVal+'">';
+    if (!editingRes){
+      html += '<label class="eqbk-checkbox-row"><input type="checkbox" id="eqbk-f-repeat"> 매주 반복</label>';
+      html += '<div id="eqbk-repeat-weeks-wrap" style="display:none;"><label>반복 횟수 (주, 이번 주 포함)</label><input type="number" id="eqbk-f-repeat-weeks" value="4" min="2" max="26"></div>';
+    }
     html += '<div class="eqbk-modal-actions">';
     html += '<button class="eqbk-btn-secondary" id="eqbk-modal-cancel">취소</button>';
-    html += '<button class="eqbk-btn-primary" id="eqbk-modal-save">예약하기</button>';
+    html += '<button class="eqbk-btn-primary" id="eqbk-modal-save">'+(editingRes ? '수정 저장' : '예약하기')+'</button>';
+    html += '</div></div></div>';
+    return html;
+  }
+
+  function renderEquipmentStatusModal(){
+    const eq = equipment.find(e=>e.id===modalState.equipmentId);
+    const current = (eq && eq.status) || 'ok';
+    const currentNote = (eq && eq.statusNote) || '';
+    let html = '<div class="eqbk-overlay" id="eqbk-overlay"><div class="eqbk-modal">';
+    html += '<button class="eqbk-modal-close" id="eqbk-modal-close">✕</button>';
+    html += '<h2>'+(eq?eq.name:'')+' 상태 변경</h2><div class="eqbk-modal-sub">'+(eq?eq.tag:'')+'</div>';
+    html += '<div class="eqbk-status-choice-group">';
+    html += '<div class="eqbk-status-choice'+(current==='ok'?' eqbk-status-choice-active':'')+'" data-status-choice="ok">✅ 정상</div>';
+    html += '<div class="eqbk-status-choice'+(current==='maintenance'?' eqbk-status-choice-active':'')+'" data-status-choice="maintenance">🔧 점검중</div>';
+    html += '<div class="eqbk-status-choice'+(current==='broken'?' eqbk-status-choice-active':'')+'" data-status-choice="broken">⛔ 고장</div>';
+    html += '</div>';
+    html += '<input type="hidden" id="eqbk-status-value" value="'+current+'">';
+    html += '<label>메모 (선택)</label><input id="eqbk-status-note" placeholder="예: 히터 교체중, 재입고 대기" value="'+currentNote+'">';
+    html += '<div class="eqbk-hint" style="margin-top:8px;">점검중/고장 상태인 장비는 새 예약이 자동으로 막혀요.</div>';
+    html += '<div class="eqbk-modal-actions">';
+    html += '<button class="eqbk-btn-secondary" id="eqbk-modal-cancel">취소</button>';
+    html += '<button class="eqbk-btn-primary" id="eqbk-status-save">저장</button>';
     html += '</div></div></div>';
     return html;
   }
@@ -682,11 +818,56 @@ const firebaseConfig = {
       };
     });
 
+    document.querySelectorAll('.eqbk-eq-tag-btn').forEach(el => {
+      el.onclick = (ev) => {
+        ev.stopPropagation();
+        modalState = { mode: 'equipmentStatus', equipmentId: el.getAttribute('data-eqid') };
+        render();
+      };
+    });
+
+    document.querySelectorAll('[data-status-choice]').forEach(el => {
+      el.onclick = () => {
+        const val = el.getAttribute('data-status-choice');
+        if (q('eqbk-status-value')) q('eqbk-status-value').value = val;
+        document.querySelectorAll('[data-status-choice]').forEach(x => x.classList.remove('eqbk-status-choice-active'));
+        el.classList.add('eqbk-status-choice-active');
+      };
+    });
+
+    if (q('eqbk-status-save')){
+      q('eqbk-status-save').onclick = async () => {
+        const eq = equipment.find(e=>e.id===modalState.equipmentId);
+        if (eq){
+          eq.status = q('eqbk-status-value').value;
+          eq.statusNote = q('eqbk-status-note').value.trim();
+          await saveEquipment();
+        }
+        modalState = null;
+        render();
+      };
+    }
+
+    if (q('eqbk-f-repeat')){
+      q('eqbk-f-repeat').onchange = () => {
+        const wrap = q('eqbk-repeat-weeks-wrap');
+        if (wrap) wrap.style.display = q('eqbk-f-repeat').checked ? 'block' : 'none';
+      };
+    }
+
     if (q('eqbk-overlay')){
       q('eqbk-overlay').onclick = (e) => { if (e.target.id === 'eqbk-overlay'){ modalState = null; render(); } };
     }
     if (q('eqbk-modal-close')) q('eqbk-modal-close').onclick = () => { modalState = null; render(); };
     if (q('eqbk-modal-cancel')) q('eqbk-modal-cancel').onclick = () => { modalState = null; render(); };
+
+    document.querySelectorAll('[data-edit]').forEach(btn => {
+      btn.onclick = () => {
+        const id = btn.getAttribute('data-edit');
+        modalState = { ...modalState, editingId: id };
+        render();
+      };
+    });
 
     document.querySelectorAll('[data-end]').forEach(btn => {
       btn.onclick = async () => {
@@ -702,6 +883,7 @@ const firebaseConfig = {
 
     document.querySelectorAll('[data-delete]').forEach(btn => {
       btn.onclick = async () => {
+        if (!confirm('정말 삭제하시겠어요? 이 작업은 되돌릴 수 없어요.')) return;
         const id = btn.getAttribute('data-delete');
         reservations = reservations.filter(r => r.id !== id);
         await saveReservations();
@@ -716,20 +898,67 @@ const firebaseConfig = {
         const start = q('eqbk-f-start').value;
         const end = q('eqbk-f-end').value;
         const note = q('eqbk-f-note').value.trim();
+        const editingId = modalState.editingId;
         if (!person){ alert('이름을 입력해주세요'); return; }
         if (!start || !end){ alert('시작/종료 시간을 입력해주세요'); return; }
         if (new Date(end) <= new Date(start)){ alert('종료 시간이 시작 시간보다 늦어야 해요'); return; }
-        const conflict = reservations.find(r => r.equipmentId === equipmentId &&
+
+        const eqObj = equipment.find(e=>e.id===equipmentId);
+        if (eqObj && eqObj.status && eqObj.status !== 'ok'){
+          alert('⚠️ '+eqObj.name+'은(는) 현재 '+(eqObj.status==='maintenance'?'점검중':'고장')+' 상태라 예약할 수 없어요.\n장비 이름 옆 태그(EQ-0N)를 눌러 상태를 확인/변경할 수 있어요.');
+          return;
+        }
+
+        if (!people.includes(person)){ people.push(person); await savePeople(); }
+
+        if (editingId){
+          const target = reservations.find(r => r.id === editingId);
+          if (!target){ modalState = null; render(); return; }
+          const conflict = reservations.find(r => r.equipmentId === equipmentId && r.id !== editingId &&
+            getStatus(r) !== 'ended' &&
+            new Date(r.start).getTime() < new Date(end).getTime() &&
+            new Date(start).getTime() < new Date(r.end).getTime()
+          );
+          if (conflict){
+            const proceed = confirm('⚠️ 이미 '+conflict.person+'님이 겹치는 시간에 예약했어요 ('+fmtRange(conflict)+').\n그래도 저장하시겠어요?');
+            if (!proceed) return;
+          }
+          target.equipmentId = equipmentId;
+          target.person = person;
+          target.start = start;
+          target.end = end;
+          target.note = note;
+          await saveReservations();
+          modalState = null;
+          render();
+          return;
+        }
+
+        const repeatChecked = q('eqbk-f-repeat') && q('eqbk-f-repeat').checked;
+        const weeks = repeatChecked ? Math.max(2, Math.min(26, parseInt(q('eqbk-f-repeat-weeks').value, 10) || 4)) : 1;
+        const baseStart = new Date(start);
+        const baseEnd = new Date(end);
+        const occurrences = [];
+        for (let i = 0; i < weeks; i++){
+          const s = new Date(baseStart.getTime() + i * 7 * 86400000);
+          const e = new Date(baseEnd.getTime() + i * 7 * 86400000);
+          occurrences.push({ start: toLocalInput(s), end: toLocalInput(e) });
+        }
+
+        const conflicts = occurrences.filter(occ => reservations.find(r => r.equipmentId === equipmentId &&
           getStatus(r) !== 'ended' &&
-          new Date(r.start).getTime() < new Date(end).getTime() &&
-          new Date(start).getTime() < new Date(r.end).getTime()
-        );
-        if (conflict){
-          const proceed = confirm('⚠️ 이미 '+conflict.person+'님이 겹치는 시간에 예약했어요 ('+fmtRange(conflict)+').\n그래도 예약하시겠어요?');
+          new Date(r.start).getTime() < new Date(occ.end).getTime() &&
+          new Date(occ.start).getTime() < new Date(r.end).getTime()
+        ));
+        if (conflicts.length > 0){
+          const proceed = confirm('⚠️ '+conflicts.length+'건이 다른 예약과 겹쳐요.\n그래도 전체 예약하시겠어요?');
           if (!proceed) return;
         }
-        reservations.push({ id: uid(), equipmentId, person, start, end, note });
-        if (!people.includes(person)){ people.push(person); await savePeople(); }
+
+        const seriesId = weeks > 1 ? uid() : null;
+        occurrences.forEach(occ => {
+          reservations.push({ id: uid(), equipmentId, person, start: occ.start, end: occ.end, note, seriesId });
+        });
         await saveReservations();
         modalState = null;
         render();
@@ -771,3 +1000,5 @@ const firebaseConfig = {
   })();
 })();
 </script>
+</body>
+</html>
