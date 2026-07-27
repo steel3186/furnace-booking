@@ -1,0 +1,641 @@
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+.eqbk-root {
+  --bg: #F5F4F0;
+  --panel: #FFFFFF;
+  --border: #DDD9D0;
+  --text: #20241F;
+  --muted: #6B6F68;
+  --accent: #2D6E5E;
+  --accent-soft: #E6EFEC;
+  --danger: #A13D3D;
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 16px;
+  box-sizing: border-box;
+}
+.eqbk-root * { box-sizing: border-box; }
+.eqbk-root h1, .eqbk-root h2, .eqbk-root .eqbk-display {
+  font-family: 'Space Grotesk', sans-serif;
+}
+.eqbk-mono { font-family: 'IBM Plex Mono', monospace; }
+
+.eqbk-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.eqbk-header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+.eqbk-sub {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 2px 0 16px;
+}
+.eqbk-sync {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.eqbk-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.eqbk-nav button {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+}
+.eqbk-nav button:hover { background: var(--accent-soft); border-color: var(--accent); }
+.eqbk-nav .eqbk-month-label {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 17px;
+  min-width: 110px;
+  text-align: center;
+}
+.eqbk-add-btn {
+  margin-left: auto;
+  background: var(--accent) !important;
+  color: white !important;
+  border-color: var(--accent) !important;
+  font-weight: 600;
+}
+
+.eqbk-panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 18px;
+}
+.eqbk-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+table.eqbk-grid {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 640px;
+}
+table.eqbk-grid th, table.eqbk-grid td {
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  padding: 0;
+  text-align: center;
+}
+table.eqbk-grid thead th {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10.5px;
+  color: var(--muted);
+  padding: 6px 2px;
+  background: var(--panel);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+table.eqbk-grid thead th.eqbk-weekend { color: var(--danger); }
+table.eqbk-grid thead th.eqbk-today-col { background: var(--accent-soft); color: var(--accent); }
+table.eqbk-grid td.eqbk-eqname {
+  position: sticky;
+  left: 0;
+  background: var(--panel);
+  z-index: 1;
+  text-align: left;
+  padding: 8px 10px;
+  min-width: 130px;
+  max-width: 150px;
+}
+table.eqbk-grid th.eqbk-corner {
+  position: sticky;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  background: var(--panel);
+  min-width: 130px;
+}
+.eqbk-eq-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9.5px;
+  color: var(--muted);
+  letter-spacing: 0.03em;
+  display: block;
+}
+.eqbk-eq-name {
+  font-size: 13px;
+  font-weight: 600;
+  cursor: text;
+  border-bottom: 1px dashed transparent;
+}
+.eqbk-eq-name:hover { border-bottom: 1px dashed var(--muted); }
+td.eqbk-cell {
+  width: 28px;
+  height: 34px;
+  cursor: pointer;
+  position: relative;
+}
+td.eqbk-cell:hover { outline: 2px solid var(--accent); outline-offset: -2px; }
+td.eqbk-cell.eqbk-today { background: var(--accent-soft); }
+.eqbk-bar {
+  position: absolute;
+  inset: 4px;
+  border-radius: 4px;
+  opacity: 0.92;
+}
+.eqbk-badge {
+  position: absolute;
+  bottom: 1px;
+  right: 2px;
+  font-size: 8px;
+  color: white;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.eqbk-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 14px;
+  font-size: 12px;
+  border-top: 1px solid var(--border);
+  background: #FBFBFA;
+}
+.eqbk-legend-item { display: flex; align-items: center; gap: 5px; }
+.eqbk-dot { width: 9px; height: 9px; border-radius: 3px; display: inline-block; }
+
+.eqbk-upcoming h2 {
+  font-size: 14px;
+  margin: 0 0 8px;
+}
+.eqbk-upcoming-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.eqbk-upcoming-item {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.eqbk-upcoming-item .eqbk-dot { flex-shrink: 0; }
+.eqbk-upcoming-meta { color: var(--muted); font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
+.eqbk-empty { color: var(--muted); font-size: 12.5px; padding: 4px 0; }
+
+.eqbk-overlay {
+  position: fixed; inset: 0;
+  background: rgba(20,24,20,0.45);
+  display: flex; align-items: flex-end; justify-content: center;
+  z-index: 50;
+}
+@media (min-width: 640px) {
+  .eqbk-overlay { align-items: center; }
+}
+.eqbk-modal {
+  background: var(--panel);
+  border-radius: 14px 14px 0 0;
+  width: 100%; max-width: 420px;
+  max-height: 88vh;
+  overflow-y: auto;
+  padding: 18px 18px 20px;
+}
+@media (min-width: 640px) {
+  .eqbk-modal { border-radius: 14px; }
+}
+.eqbk-modal h2 { font-size: 16px; margin: 0 0 3px; }
+.eqbk-modal .eqbk-modal-sub { color: var(--muted); font-size: 12px; margin-bottom: 14px; font-family: 'IBM Plex Mono', monospace; }
+.eqbk-modal label {
+  display: block; font-size: 11.5px; color: var(--muted); margin: 10px 0 4px; font-weight: 600;
+}
+.eqbk-modal input, .eqbk-modal select, .eqbk-modal textarea {
+  width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px;
+  font-size: 13.5px; font-family: 'Inter', sans-serif; background: #FCFCFB;
+}
+.eqbk-modal-actions { display: flex; gap: 8px; margin-top: 16px; }
+.eqbk-btn-primary, .eqbk-btn-secondary {
+  flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border);
+  font-size: 13.5px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif;
+}
+.eqbk-btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
+.eqbk-btn-secondary { background: var(--panel); color: var(--text); }
+.eqbk-modal-close { float: right; background: none; border: none; font-size: 18px; cursor: pointer; color: var(--muted); }
+.eqbk-existing-list { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.eqbk-existing-item {
+  border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px;
+  display: flex; justify-content: space-between; align-items: center; font-size: 12.5px;
+}
+.eqbk-existing-item { flex-wrap: wrap; }
+.eqbk-existing-item button {
+  border: none; background: none; color: var(--danger); cursor: pointer; font-size: 11.5px; font-weight: 600;
+}
+.eqbk-existing-main { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; flex: 1; }
+.eqbk-existing-actions { display: flex; align-items: center; gap: 10px; }
+.eqbk-status-badge {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.eqbk-status-scheduled { background: var(--accent-soft); color: var(--accent); }
+.eqbk-status-active { background: #FBEBD9; color: #B5541D; }
+.eqbk-status-ended { background: #EDEDEA; color: var(--muted); }
+.eqbk-end-btn {
+  border: 1px solid var(--danger) !important;
+  color: var(--danger) !important;
+  border-radius: 6px;
+  padding: 3px 8px !important;
+  font-size: 11px !important;
+}
+.eqbk-fab {
+  position: fixed; bottom: 20px; right: 20px;
+  background: var(--accent); color: white; border: none; border-radius: 50%;
+  width: 52px; height: 52px; font-size: 26px; cursor: pointer;
+  box-shadow: 0 4px 14px rgba(45,110,94,0.4); z-index: 40;
+}
+.eqbk-hint { font-size: 11px; color: var(--muted); margin: -8px 0 14px; }
+</style>
+
+<div id="eqbk-app" class="eqbk-root"><div class="eqbk-empty">불러오는 중...</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-database-compat.min.js"></script>
+
+<script>
+// ==========================================================
+// 여기에 본인의 Firebase 프로젝트 설정 값을 붙여넣으세요.
+// Firebase 콘솔 > 프로젝트 설정 > 일반 > 내 앱 > SDK 설정 및 구성 에서
+// "구성" 형식으로 확인할 수 있습니다.
+// ==========================================================
+const firebaseConfig = {
+  apiKey: "AIzaSyBqqy0N_v3kvgjXIVqKXjUqOzlgJ1DmQjY",
+  authDomain: "furnace-booking.firebaseapp.com",
+  databaseURL: "https://furnace-booking-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "furnace-booking",
+  storageBucket: "furnace-booking.firebasestorage.app",
+  messagingSenderId: "1007654315159",
+  appId: "1:1007654315159:web:353b25da5ff32b097735d2"
+};
+</script>
+
+<script>
+(function(){
+  const PERSON_COLORS = ['#2D6E5E','#B5541D','#3D5A80','#8E4585','#4C7031','#A13D3D','#5B5F97','#C08A2E','#1F6F78','#8A5A2E'];
+  const DAY_LABELS = ['일','월','화','수','목','금','토'];
+  const DEFAULT_NAMES = ['대형로','중형로','소형로','Furnace#1','Furnace#2','Furnace#3','Furnace#4'];
+  const OLD_DEFAULT_NAMES = [1,2,3,4,5,6,7].map(n => '장비 '+n);
+
+  let equipment = [];
+  let reservations = [];
+  let people = [];
+  let viewDate = new Date();
+  let modalState = null; // {mode:'day', equipmentId, dateStr} or {mode:'new'}
+  let eqRef, resRef, pplRef;
+
+  function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
+
+  function colorForPerson(name){
+    let h = 0;
+    for (let i=0;i<name.length;i++) h = (h*31 + name.charCodeAt(i)) >>> 0;
+    return PERSON_COLORS[h % PERSON_COLORS.length];
+  }
+
+  function pad(n){ return n < 10 ? '0'+n : ''+n; }
+  function dateStr(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+  function toLocalInput(d){ return dateStr(d) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+
+  async function initFirebaseData(){
+    const snap = await eqRef.once('value');
+    if (!snap.exists()){
+      const defaults = DEFAULT_NAMES.map((name, i) => ({ id: 'eq'+(i+1), tag: 'EQ-0'+(i+1), name }));
+      await eqRef.set(defaults);
+    }
+  }
+
+  function toArray(val){
+    if (!val) return [];
+    return Array.isArray(val) ? val.filter(Boolean) : Object.values(val);
+  }
+
+  function attachListeners(){
+    eqRef.on('value', snap => {
+      equipment = toArray(snap.val());
+      const isOldDefault = equipment.length === OLD_DEFAULT_NAMES.length &&
+        equipment.every((e,i) => e.name === OLD_DEFAULT_NAMES[i]);
+      if (isOldDefault){
+        equipment.forEach((e,i) => { e.name = DEFAULT_NAMES[i]; });
+        eqRef.set(equipment);
+        return;
+      }
+      if (!modalState) render();
+    });
+    resRef.on('value', snap => {
+      reservations = toArray(snap.val());
+      if (!modalState) render();
+    });
+    pplRef.on('value', snap => {
+      people = toArray(snap.val());
+      if (!modalState) render();
+    });
+  }
+
+  function saveReservations(){ return resRef.set(reservations); }
+  function saveEquipment(){ return eqRef.set(equipment); }
+  function savePeople(){ return pplRef.set(people); }
+
+  function reservationsForEquipmentOnDay(eqId, day){
+    const dayStart = new Date(day.getFullYear(), day.getMonth(), day.getDate(), 0,0,0);
+    const dayEnd = new Date(day.getFullYear(), day.getMonth(), day.getDate(), 23,59,59);
+    return reservations.filter(r => r.equipmentId === eqId &&
+      new Date(r.start) <= dayEnd && new Date(r.end) >= dayStart
+    ).sort((a,b)=> new Date(a.start) - new Date(b.start));
+  }
+
+  function getStatus(r){
+    if (r.endedAt) return 'ended';
+    const now = new Date();
+    if (now < new Date(r.start)) return 'scheduled';
+    return 'active'; // within or past the reserved window but not manually ended
+  }
+  function statusLabel(status){
+    if (status === 'ended') return '사용종료';
+    if (status === 'active') return '사용중';
+    return '예약됨';
+  }
+
+  function fmtRange(r){
+    const s = new Date(r.start), e = new Date(r.end);
+    const sameDay = s.toDateString() === e.toDateString();
+    const timeFmt = d => pad(d.getHours())+':'+pad(d.getMinutes());
+    const dateFmt = d => (d.getMonth()+1)+'/'+d.getDate();
+    if (sameDay) return dateFmt(s) + ' ' + timeFmt(s) + '–' + timeFmt(e);
+    return dateFmt(s) + ' ' + timeFmt(s) + ' → ' + dateFmt(e) + ' ' + timeFmt(e);
+  }
+
+  function render(){
+    const app = document.getElementById('eqbk-app');
+    const year = viewDate.getFullYear();
+    const month = viewDate.getMonth();
+    const daysInMonth = new Date(year, month+1, 0).getDate();
+    const today = new Date();
+    const isThisMonth = today.getFullYear()===year && today.getMonth()===month;
+
+    let html = '';
+    html += '<div class="eqbk-header"><h1>🔧 장비 예약 보드</h1><div class="eqbk-sync">🔥 Firebase 실시간 연결됨</div></div>';
+    html += '<div class="eqbk-sub">셀을 눌러 해당 날짜의 예약을 보거나 추가하세요 · 장비 이름을 눌러 수정할 수 있어요</div>';
+
+    html += '<div class="eqbk-nav">';
+    html += '<button id="eqbk-prev">← 이전달</button>';
+    html += '<div class="eqbk-month-label">'+year+'년 '+(month+1)+'월</div>';
+    html += '<button id="eqbk-next">다음달 →</button>';
+    html += '<button id="eqbk-today2">오늘</button>';
+    html += '<button class="eqbk-add-btn" id="eqbk-new-top">+ 예약 추가</button>';
+    html += '</div>';
+
+    html += '<div class="eqbk-panel"><div class="eqbk-scroll"><table class="eqbk-grid"><thead><tr><th class="eqbk-corner">장비</th>';
+    for (let d=1; d<=daysInMonth; d++){
+      const dt = new Date(year, month, d);
+      const isToday = isThisMonth && d === today.getDate();
+      const wd = dt.getDay();
+      const cls = (wd===0||wd===6) ? 'eqbk-weekend' : (isToday ? 'eqbk-today-col' : '');
+      html += '<th class="'+cls+'">'+d+'<br>'+DAY_LABELS[wd]+'</th>';
+    }
+    html += '</tr></thead><tbody>';
+
+    equipment.forEach(eq => {
+      html += '<tr><td class="eqbk-eqname"><span class="eqbk-eq-tag">'+eq.tag+'</span><span class="eqbk-eq-name" data-eqid="'+eq.id+'" title="눌러서 이름 수정">'+eq.name+'</span></td>';
+      for (let d=1; d<=daysInMonth; d++){
+        const dt = new Date(year, month, d);
+        const isToday = isThisMonth && d === today.getDate();
+        const list = reservationsForEquipmentOnDay(eq.id, dt);
+        let inner = '';
+        if (list.length > 0){
+          const top = list[0];
+          const st = getStatus(top);
+          const c = st === 'ended' ? '#B9B7AE' : colorForPerson(top.person);
+          const opacity = st === 'scheduled' ? 0.5 : (st === 'ended' ? 0.7 : 0.95);
+          inner = '<div class="eqbk-bar" style="background:'+c+';opacity:'+opacity+'"></div>';
+          if (list.length > 1) inner += '<span class="eqbk-badge">+'+(list.length-1)+'</span>';
+        }
+        html += '<td class="eqbk-cell '+(isToday?'eqbk-today':'')+'" data-eqid="'+eq.id+'" data-date="'+dateStr(dt)+'">'+inner+'</td>';
+      }
+      html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+
+    const uniquePeople = [...new Set(reservations.map(r=>r.person))];
+    html += '<div class="eqbk-legend">';
+    if (uniquePeople.length === 0) html += '<span class="eqbk-empty">아직 예약이 없어요</span>';
+    uniquePeople.forEach(p => {
+      html += '<div class="eqbk-legend-item"><span class="eqbk-dot" style="background:'+colorForPerson(p)+'"></span>'+p+'</div>';
+    });
+    html += '</div></div>';
+
+    // upcoming list (next 7 days, all equipment)
+    const now = new Date();
+    const in7 = new Date(now.getTime() + 7*86400000);
+    const upcoming = reservations
+      .filter(r => new Date(r.end) >= now && new Date(r.start) <= in7)
+      .sort((a,b)=> new Date(a.start) - new Date(b.start));
+    html += '<div class="eqbk-upcoming"><h2>📅 앞으로 7일간 예약</h2>';
+    if (upcoming.length === 0) html += '<div class="eqbk-empty">예정된 예약이 없어요</div>';
+    else {
+      html += '<div class="eqbk-upcoming-list">';
+      upcoming.forEach(r => {
+        const eq = equipment.find(e=>e.id===r.equipmentId);
+        const st = getStatus(r);
+        html += '<div class="eqbk-upcoming-item"><span class="eqbk-dot" style="background:'+colorForPerson(r.person)+'"></span>'
+          + '<strong>'+(eq?eq.name:'?')+'</strong> · '+r.person
+          + '<span class="eqbk-status-badge eqbk-status-'+st+'">'+statusLabel(st)+'</span>'
+          + '<span class="eqbk-upcoming-meta" style="margin-left:auto">'+fmtRange(r)+'</span></div>';
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+
+    html += '<button class="eqbk-fab" id="eqbk-fab" title="예약 추가">+</button>';
+
+    if (modalState) html += renderModal();
+
+    app.innerHTML = html;
+    attachHandlers();
+  }
+
+  function renderModal(){
+    const peopleOptions = people.map(p=>'<option value="'+p+'">').join('');
+    let defaultEq = modalState.equipmentId || (equipment[0] && equipment[0].id);
+    let defaultDate = modalState.dateStr || dateStr(new Date());
+    let startVal = defaultDate + 'T09:00';
+    let endVal = defaultDate + 'T18:00';
+
+    let html = '<div class="eqbk-overlay" id="eqbk-overlay"><div class="eqbk-modal">';
+    html += '<button class="eqbk-modal-close" id="eqbk-modal-close">✕</button>';
+
+    if (modalState.mode === 'day'){
+      const eq = equipment.find(e=>e.id===modalState.equipmentId);
+      const list = reservationsForEquipmentOnDay(modalState.equipmentId, new Date(modalState.dateStr));
+      html += '<h2>'+(eq?eq.name:'')+'</h2><div class="eqbk-modal-sub">'+modalState.dateStr+'</div>';
+      html += '<div class="eqbk-existing-list">';
+      if (list.length === 0) html += '<div class="eqbk-empty">이 날짜에 예약이 없어요</div>';
+      list.forEach(r => {
+        const st = getStatus(r);
+        html += '<div class="eqbk-existing-item">'
+          + '<span class="eqbk-existing-main"><span class="eqbk-dot" style="background:'+colorForPerson(r.person)+';display:inline-block"></span>'
+          + r.person+' · '+fmtRange(r)+(r.note?(' · '+r.note):'')
+          + '<span class="eqbk-status-badge eqbk-status-'+st+'">'+statusLabel(st)+'</span></span>'
+          + '<span class="eqbk-existing-actions">'
+          + (st !== 'ended' ? '<button class="eqbk-end-btn" data-end="'+r.id+'">사용 종료</button>' : '')
+          + '<button data-delete="'+r.id+'">삭제</button></span></div>';
+      });
+      html += '</div>';
+    }
+
+    html += '<h2 style="margin-top:16px">'+(modalState.mode==='day' ? '새 예약 추가' : '예약 추가')+'</h2>';
+    html += '<label>장비</label><select id="eqbk-f-equipment">';
+    equipment.forEach(eq => html += '<option value="'+eq.id+'" '+(eq.id===defaultEq?'selected':'')+'>'+eq.name+'</option>');
+    html += '</select>';
+    html += '<label>이름</label><input id="eqbk-f-person" list="eqbk-people-list" placeholder="예: 김민수">';
+    html += '<datalist id="eqbk-people-list">'+peopleOptions+'</datalist>';
+    html += '<label>시작</label><input type="datetime-local" id="eqbk-f-start" value="'+startVal+'">';
+    html += '<label>종료</label><input type="datetime-local" id="eqbk-f-end" value="'+endVal+'">';
+    html += '<label>메모 (선택)</label><input id="eqbk-f-note" placeholder="예: 실험 A용">';
+    html += '<div class="eqbk-modal-actions">';
+    html += '<button class="eqbk-btn-secondary" id="eqbk-modal-cancel">취소</button>';
+    html += '<button class="eqbk-btn-primary" id="eqbk-modal-save">예약하기</button>';
+    html += '</div></div></div>';
+    return html;
+  }
+
+  function attachHandlers(){
+    const q = sel => document.getElementById(sel);
+    if (q('eqbk-prev')) q('eqbk-prev').onclick = () => { viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth()-1, 1); render(); };
+    if (q('eqbk-next')) q('eqbk-next').onclick = () => { viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth()+1, 1); render(); };
+    if (q('eqbk-today2')) q('eqbk-today2').onclick = () => { viewDate = new Date(); render(); };
+    if (q('eqbk-new-top')) q('eqbk-new-top').onclick = () => { modalState = { mode: 'new' }; render(); };
+    if (q('eqbk-fab')) q('eqbk-fab').onclick = () => { modalState = { mode: 'new' }; render(); };
+
+    document.querySelectorAll('.eqbk-cell').forEach(td => {
+      td.onclick = () => {
+        modalState = { mode: 'day', equipmentId: td.getAttribute('data-eqid'), dateStr: td.getAttribute('data-date') };
+        render();
+      };
+    });
+
+    document.querySelectorAll('.eqbk-eq-name').forEach(el => {
+      el.onclick = async (ev) => {
+        ev.stopPropagation();
+        const id = el.getAttribute('data-eqid');
+        const eq = equipment.find(e=>e.id===id);
+        const name = prompt('장비 이름 수정', eq.name);
+        if (name && name.trim()){
+          eq.name = name.trim();
+          await saveEquipment();
+          render();
+        }
+      };
+    });
+
+    if (q('eqbk-overlay')){
+      q('eqbk-overlay').onclick = (e) => { if (e.target.id === 'eqbk-overlay'){ modalState = null; render(); } };
+    }
+    if (q('eqbk-modal-close')) q('eqbk-modal-close').onclick = () => { modalState = null; render(); };
+    if (q('eqbk-modal-cancel')) q('eqbk-modal-cancel').onclick = () => { modalState = null; render(); };
+
+    document.querySelectorAll('[data-end]').forEach(btn => {
+      btn.onclick = async () => {
+        const id = btn.getAttribute('data-end');
+        const r = reservations.find(x => x.id === id);
+        if (r){
+          r.endedAt = new Date().toISOString();
+          await saveReservations();
+          render();
+        }
+      };
+    });
+
+    document.querySelectorAll('[data-delete]').forEach(btn => {
+      btn.onclick = async () => {
+        const id = btn.getAttribute('data-delete');
+        reservations = reservations.filter(r => r.id !== id);
+        await saveReservations();
+        render();
+      };
+    });
+
+    if (q('eqbk-modal-save')){
+      q('eqbk-modal-save').onclick = async () => {
+        const equipmentId = q('eqbk-f-equipment').value;
+        const person = q('eqbk-f-person').value.trim();
+        const start = q('eqbk-f-start').value;
+        const end = q('eqbk-f-end').value;
+        const note = q('eqbk-f-note').value.trim();
+        if (!person){ alert('이름을 입력해주세요'); return; }
+        if (!start || !end){ alert('시작/종료 시간을 입력해주세요'); return; }
+        if (new Date(end) <= new Date(start)){ alert('종료 시간이 시작 시간보다 늦어야 해요'); return; }
+        reservations.push({ id: uid(), equipmentId, person, start, end, note });
+        if (!people.includes(person)){ people.push(person); await savePeople(); }
+        await saveReservations();
+        modalState = null;
+        render();
+      };
+    }
+  }
+
+  function renderSetupBanner(){
+    const app = document.getElementById('eqbk-app');
+    app.innerHTML = ''
+      + '<div class="eqbk-root">'
+      + '<div style="max-width:480px;margin:40px auto;text-align:center;font-family:Inter,sans-serif;">'
+      + '<div style="font-size:32px;margin-bottom:12px;">🔧🔥</div>'
+      + '<h1 style="font-size:18px;margin-bottom:8px;">Firebase 설정이 필요해요</h1>'
+      + '<p style="color:#6B6F68;font-size:13.5px;line-height:1.6;">'
+      + '이 파일 상단의 <code>firebaseConfig</code> 값을 본인의 Firebase 프로젝트 설정으로 바꿔주세요.<br>'
+      + 'Firebase 콘솔 → 프로젝트 설정 → 일반 → 내 앱 에서 값을 복사할 수 있어요.'
+      + '</p></div></div>';
+  }
+
+  (async function init(){
+    if (!firebaseConfig || firebaseConfig.apiKey === 'YOUR_API_KEY_HERE'){
+      renderSetupBanner();
+      return;
+    }
+    try {
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
+      eqRef = db.ref('equipment');
+      resRef = db.ref('reservations');
+      pplRef = db.ref('people');
+      await initFirebaseData();
+      attachListeners();
+    } catch(e){
+      console.error('Firebase init failed', e);
+      const app = document.getElementById('eqbk-app');
+      app.innerHTML = '<div class="eqbk-empty">Firebase 연결에 실패했어요. 콘솔(F12)에서 오류 메시지를 확인해주세요.</div>';
+    }
+  })();
+})();
+</script>
