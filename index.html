@@ -155,11 +155,11 @@ td.eqbk-cell {
 }
 td.eqbk-cell:hover { outline: 2px solid var(--accent); outline-offset: -2px; }
 td.eqbk-cell.eqbk-today { background: var(--accent-soft); }
-.eqbk-bar {
+.eqbk-seg {
   position: absolute;
-  inset: 4px;
-  border-radius: 4px;
-  opacity: 0.92;
+  top: 4px;
+  bottom: 4px;
+  border-radius: 3px;
 }
 .eqbk-badge {
   position: absolute;
@@ -168,6 +168,10 @@ td.eqbk-cell.eqbk-today { background: var(--accent-soft); }
   font-size: 8px;
   color: white;
   font-family: 'IBM Plex Mono', monospace;
+  background: rgba(0,0,0,0.35);
+  border-radius: 3px;
+  padding: 0 2px;
+  z-index: 2;
 }
 
 .eqbk-legend {
@@ -277,7 +281,33 @@ td.eqbk-cell.eqbk-today { background: var(--accent-soft); }
   width: 52px; height: 52px; font-size: 26px; cursor: pointer;
   box-shadow: 0 4px 14px rgba(45,110,94,0.4); z-index: 40;
 }
-.eqbk-hint { font-size: 11px; color: var(--muted); margin: -8px 0 14px; }
+.eqbk-mode-btn.eqbk-mode-active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+table.eqbk-grid thead th.eqbk-day-header { cursor: pointer; }
+table.eqbk-grid thead th.eqbk-day-header:hover { background: var(--accent-soft); }
+
+table.eqbk-week-table { min-width: 900px; }
+td.eqbk-week-cell {
+  min-width: 130px;
+  vertical-align: top;
+  padding: 6px;
+  cursor: pointer;
+}
+td.eqbk-week-cell:hover { outline: 2px solid var(--accent); outline-offset: -2px; }
+td.eqbk-week-cell.eqbk-today { background: var(--accent-soft); }
+.eqbk-week-chip {
+  border-radius: 6px;
+  padding: 5px 7px;
+  margin-bottom: 5px;
+  text-align: left;
+}
+.eqbk-week-chip-person { font-size: 12px; font-weight: 700; line-height: 1.3; }
+.eqbk-week-chip-time { font-size: 10px; font-family: 'IBM Plex Mono', monospace; opacity: 0.9; margin-top: 1px; }
+.eqbk-week-chip-status { font-size: 9px; margin-top: 3px; font-weight: 700; letter-spacing: 0.02em; }
+
 </style>
 
 <div id="eqbk-app" class="eqbk-root"><div class="eqbk-empty">불러오는 중...</div></div>
@@ -313,8 +343,16 @@ const firebaseConfig = {
   let reservations = [];
   let people = [];
   let viewDate = new Date();
+  let viewMode = 'month'; // 'month' | 'week'
+  let weekAnchor = getWeekStart(new Date());
   let modalState = null; // {mode:'day', equipmentId, dateStr} or {mode:'new'}
   let eqRef, resRef, pplRef;
+
+  function getWeekStart(d){
+    const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    x.setDate(x.getDate() - x.getDay());
+    return x;
+  }
 
   function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
 
@@ -396,6 +434,93 @@ const firebaseConfig = {
     return dateFmt(s) + ' ' + timeFmt(s) + ' → ' + dateFmt(e) + ' ' + timeFmt(e);
   }
 
+  function buildMonthTableHtml(year, month, daysInMonth, today, isThisMonth){
+    let html = '<table class="eqbk-grid"><thead><tr><th class="eqbk-corner">장비</th>';
+    for (let d=1; d<=daysInMonth; d++){
+      const dt = new Date(year, month, d);
+      const isToday = isThisMonth && d === today.getDate();
+      const wd = dt.getDay();
+      const cls = 'eqbk-day-header ' + ((wd===0||wd===6) ? 'eqbk-weekend' : (isToday ? 'eqbk-today-col' : ''));
+      html += '<th class="'+cls+'" data-date="'+dateStr(dt)+'" title="클릭하면 이 주를 크게 보기">'+d+'<br>'+DAY_LABELS[wd]+'</th>';
+    }
+    html += '</tr></thead><tbody>';
+
+    equipment.forEach(eq => {
+      html += '<tr><td class="eqbk-eqname"><span class="eqbk-eq-tag">'+eq.tag+'</span><span class="eqbk-eq-name" data-eqid="'+eq.id+'" title="눌러서 이름 수정">'+eq.name+'</span></td>';
+      for (let d=1; d<=daysInMonth; d++){
+        const dt = new Date(year, month, d);
+        const isToday = isThisMonth && d === today.getDate();
+        const list = reservationsForEquipmentOnDay(eq.id, dt);
+        let inner = '';
+        if (list.length > 0){
+          const dayStartMs = dt.getTime();
+          const dayEndMs = dayStartMs + 86400000;
+          list.forEach(r => {
+            const rStart = Math.max(new Date(r.start).getTime(), dayStartMs);
+            const rEnd = Math.min(new Date(r.end).getTime(), dayEndMs);
+            if (rEnd <= rStart) return;
+            const leftPct = ((rStart - dayStartMs) / 86400000) * 100;
+            const widthPct = Math.max(((rEnd - rStart) / 86400000) * 100, 6);
+            const st = getStatus(r);
+            const color = st === 'ended' ? '#B9B7AE' : colorForPerson(r.person);
+            const opacity = st === 'scheduled' ? 0.5 : (st === 'ended' ? 0.65 : 0.9);
+            inner += '<div class="eqbk-seg" style="left:'+leftPct.toFixed(2)+'%;width:'+widthPct.toFixed(2)+'%;background:'+color+';opacity:'+opacity+'" title="'+r.person+' · '+fmtRange(r)+'"></div>';
+          });
+          if (list.length > 3) inner += '<span class="eqbk-badge">'+list.length+'</span>';
+        }
+        html += '<td class="eqbk-cell '+(isToday?'eqbk-today':'')+'" data-eqid="'+eq.id+'" data-date="'+dateStr(dt)+'">'+inner+'</td>';
+      }
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    return html;
+  }
+
+  function buildWeekTableHtml(){
+    const days = [];
+    for (let i=0;i<7;i++){ const dt = new Date(weekAnchor); dt.setDate(dt.getDate()+i); days.push(dt); }
+    const today = new Date();
+
+    let html = '<table class="eqbk-grid eqbk-week-table"><thead><tr><th class="eqbk-corner">장비</th>';
+    days.forEach(dt => {
+      const wd = dt.getDay();
+      const isToday = dt.toDateString() === today.toDateString();
+      const cls = ((wd===0||wd===6) ? 'eqbk-weekend' : '') + (isToday ? ' eqbk-today-col' : '');
+      html += '<th class="'+cls+'">'+(dt.getMonth()+1)+'/'+dt.getDate()+'<br>'+DAY_LABELS[wd]+'</th>';
+    });
+    html += '</tr></thead><tbody>';
+
+    equipment.forEach(eq => {
+      html += '<tr><td class="eqbk-eqname"><span class="eqbk-eq-tag">'+eq.tag+'</span><span class="eqbk-eq-name" data-eqid="'+eq.id+'" title="눌러서 이름 수정">'+eq.name+'</span></td>';
+      days.forEach(dt => {
+        const isToday = dt.toDateString() === today.toDateString();
+        const dayStart = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 0,0,0);
+        const dayEnd = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 23,59,59);
+        const list = reservationsForEquipmentOnDay(eq.id, dt);
+        let inner = '';
+        list.forEach(r => {
+          const st = getStatus(r);
+          const s = new Date(r.start), e = new Date(r.end);
+          const startsBefore = s < dayStart;
+          const endsAfter = e > dayEnd;
+          const timeLabel = (startsBefore ? '⋯' : pad(s.getHours())+':'+pad(s.getMinutes()))
+            + '–' + (endsAfter ? '⋯' : pad(e.getHours())+':'+pad(e.getMinutes()));
+          const bg = st === 'ended' ? '#D9D7CE' : colorForPerson(r.person);
+          const textColor = st === 'ended' ? 'var(--text)' : '#fff';
+          const opacity = st === 'scheduled' ? 0.7 : (st === 'ended' ? 0.85 : 1);
+          inner += '<div class="eqbk-week-chip" style="background:'+bg+';color:'+textColor+';opacity:'+opacity+'">'
+            + '<div class="eqbk-week-chip-person">'+r.person+'</div>'
+            + '<div class="eqbk-week-chip-time">'+timeLabel+'</div>'
+            + '<div class="eqbk-week-chip-status">'+statusLabel(st)+'</div></div>';
+        });
+        html += '<td class="eqbk-week-cell '+(isToday?'eqbk-today':'')+'" data-eqid="'+eq.id+'" data-date="'+dateStr(dt)+'">'+inner+'</td>';
+      });
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    return html;
+  }
+
   function render(){
     const app = document.getElementById('eqbk-app');
     const year = viewDate.getFullYear();
@@ -409,43 +534,28 @@ const firebaseConfig = {
     html += '<div class="eqbk-sub">셀을 눌러 해당 날짜의 예약을 보거나 추가하세요 · 장비 이름을 눌러 수정할 수 있어요</div>';
 
     html += '<div class="eqbk-nav">';
-    html += '<button id="eqbk-prev">← 이전달</button>';
-    html += '<div class="eqbk-month-label">'+year+'년 '+(month+1)+'월</div>';
-    html += '<button id="eqbk-next">다음달 →</button>';
-    html += '<button id="eqbk-today2">오늘</button>';
+    html += '<button class="eqbk-mode-btn '+(viewMode==='month'?'eqbk-mode-active':'')+'" id="eqbk-mode-month">월간 요약</button>';
+    html += '<button class="eqbk-mode-btn '+(viewMode==='week'?'eqbk-mode-active':'')+'" id="eqbk-mode-week">주간 상세</button>';
+    if (viewMode === 'month'){
+      html += '<button id="eqbk-prev">← 이전달</button>';
+      html += '<div class="eqbk-month-label">'+year+'년 '+(month+1)+'월</div>';
+      html += '<button id="eqbk-next">다음달 →</button>';
+      html += '<button id="eqbk-today2">오늘</button>';
+    } else {
+      const weekEnd = new Date(weekAnchor); weekEnd.setDate(weekEnd.getDate()+6);
+      const wLabel = (weekAnchor.getMonth()+1)+'/'+weekAnchor.getDate()+' – '+(weekEnd.getMonth()+1)+'/'+weekEnd.getDate();
+      html += '<button id="eqbk-week-prev">← 지난주</button>';
+      html += '<div class="eqbk-month-label">'+wLabel+'</div>';
+      html += '<button id="eqbk-week-next">다음주 →</button>';
+      html += '<button id="eqbk-week-today">이번주</button>';
+    }
     html += '<button class="eqbk-add-btn" id="eqbk-new-top">+ 예약 추가</button>';
     html += '</div>';
 
-    html += '<div class="eqbk-panel"><div class="eqbk-scroll"><table class="eqbk-grid"><thead><tr><th class="eqbk-corner">장비</th>';
-    for (let d=1; d<=daysInMonth; d++){
-      const dt = new Date(year, month, d);
-      const isToday = isThisMonth && d === today.getDate();
-      const wd = dt.getDay();
-      const cls = (wd===0||wd===6) ? 'eqbk-weekend' : (isToday ? 'eqbk-today-col' : '');
-      html += '<th class="'+cls+'">'+d+'<br>'+DAY_LABELS[wd]+'</th>';
-    }
-    html += '</tr></thead><tbody>';
-
-    equipment.forEach(eq => {
-      html += '<tr><td class="eqbk-eqname"><span class="eqbk-eq-tag">'+eq.tag+'</span><span class="eqbk-eq-name" data-eqid="'+eq.id+'" title="눌러서 이름 수정">'+eq.name+'</span></td>';
-      for (let d=1; d<=daysInMonth; d++){
-        const dt = new Date(year, month, d);
-        const isToday = isThisMonth && d === today.getDate();
-        const list = reservationsForEquipmentOnDay(eq.id, dt);
-        let inner = '';
-        if (list.length > 0){
-          const top = list[0];
-          const st = getStatus(top);
-          const c = st === 'ended' ? '#B9B7AE' : colorForPerson(top.person);
-          const opacity = st === 'scheduled' ? 0.5 : (st === 'ended' ? 0.7 : 0.95);
-          inner = '<div class="eqbk-bar" style="background:'+c+';opacity:'+opacity+'"></div>';
-          if (list.length > 1) inner += '<span class="eqbk-badge">+'+(list.length-1)+'</span>';
-        }
-        html += '<td class="eqbk-cell '+(isToday?'eqbk-today':'')+'" data-eqid="'+eq.id+'" data-date="'+dateStr(dt)+'">'+inner+'</td>';
-      }
-      html += '</tr>';
-    });
-    html += '</tbody></table></div>';
+    html += '<div class="eqbk-panel"><div class="eqbk-scroll">';
+    if (viewMode === 'month') html += buildMonthTableHtml(year, month, daysInMonth, today, isThisMonth);
+    else html += buildWeekTableHtml();
+    html += '</div>';
 
     const uniquePeople = [...new Set(reservations.map(r=>r.person))];
     html += '<div class="eqbk-legend">';
@@ -532,13 +642,26 @@ const firebaseConfig = {
 
   function attachHandlers(){
     const q = sel => document.getElementById(sel);
+    if (q('eqbk-mode-month')) q('eqbk-mode-month').onclick = () => { viewMode = 'month'; render(); };
+    if (q('eqbk-mode-week')) q('eqbk-mode-week').onclick = () => { viewMode = 'week'; weekAnchor = getWeekStart(viewDate); render(); };
     if (q('eqbk-prev')) q('eqbk-prev').onclick = () => { viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth()-1, 1); render(); };
     if (q('eqbk-next')) q('eqbk-next').onclick = () => { viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth()+1, 1); render(); };
     if (q('eqbk-today2')) q('eqbk-today2').onclick = () => { viewDate = new Date(); render(); };
+    if (q('eqbk-week-prev')) q('eqbk-week-prev').onclick = () => { weekAnchor.setDate(weekAnchor.getDate()-7); render(); };
+    if (q('eqbk-week-next')) q('eqbk-week-next').onclick = () => { weekAnchor.setDate(weekAnchor.getDate()+7); render(); };
+    if (q('eqbk-week-today')) q('eqbk-week-today').onclick = () => { weekAnchor = getWeekStart(new Date()); render(); };
     if (q('eqbk-new-top')) q('eqbk-new-top').onclick = () => { modalState = { mode: 'new' }; render(); };
     if (q('eqbk-fab')) q('eqbk-fab').onclick = () => { modalState = { mode: 'new' }; render(); };
 
-    document.querySelectorAll('.eqbk-cell').forEach(td => {
+    document.querySelectorAll('.eqbk-day-header').forEach(th => {
+      th.onclick = () => {
+        weekAnchor = getWeekStart(new Date(th.getAttribute('data-date')));
+        viewMode = 'week';
+        render();
+      };
+    });
+
+    document.querySelectorAll('.eqbk-cell, .eqbk-week-cell').forEach(td => {
       td.onclick = () => {
         modalState = { mode: 'day', equipmentId: td.getAttribute('data-eqid'), dateStr: td.getAttribute('data-date') };
         render();
@@ -596,6 +719,15 @@ const firebaseConfig = {
         if (!person){ alert('이름을 입력해주세요'); return; }
         if (!start || !end){ alert('시작/종료 시간을 입력해주세요'); return; }
         if (new Date(end) <= new Date(start)){ alert('종료 시간이 시작 시간보다 늦어야 해요'); return; }
+        const conflict = reservations.find(r => r.equipmentId === equipmentId &&
+          getStatus(r) !== 'ended' &&
+          new Date(r.start).getTime() < new Date(end).getTime() &&
+          new Date(start).getTime() < new Date(r.end).getTime()
+        );
+        if (conflict){
+          const proceed = confirm('⚠️ 이미 '+conflict.person+'님이 겹치는 시간에 예약했어요 ('+fmtRange(conflict)+').\n그래도 예약하시겠어요?');
+          if (!proceed) return;
+        }
         reservations.push({ id: uid(), equipmentId, person, start, end, note });
         if (!people.includes(person)){ people.push(person); await savePeople(); }
         await saveReservations();
