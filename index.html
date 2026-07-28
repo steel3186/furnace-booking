@@ -357,6 +357,7 @@ td.eqbk-cell.eqbk-cell-unavailable, td.eqbk-week-cell.eqbk-cell-unavailable {
 .eqbk-stats-row:last-child { border-bottom: none; }
 .eqbk-stats-val { font-family: 'IBM Plex Mono', monospace; color: var(--muted); }
 .eqbk-hint { font-size: 11px; color: var(--muted); }
+.eqbk-manual-link { margin-left: 5px; font-size: 13px; text-decoration: none; cursor: pointer; }
 
 </style>
 </head>
@@ -389,6 +390,7 @@ const firebaseConfig = {
   const DAY_LABELS = ['일','월','화','수','목','금','토'];
   const DEFAULT_NAMES = ['대형로','중형로','소형로','Furnace#1','Furnace#2','Furnace#3','Furnace#4'];
   const OLD_DEFAULT_NAMES = [1,2,3,4,5,6,7].map(n => '장비 '+n);
+  const DEFAULT_MANUAL_URL = 'Furnace-manual-v1.pdf';
 
   let equipment = [];
   let reservations = [];
@@ -397,6 +399,7 @@ const firebaseConfig = {
   let viewMode = 'week'; // 'month' | 'week'
   let weekAnchor = getWeekStart(new Date());
   let modalState = null; // {mode:'day', equipmentId, dateStr} or {mode:'new'}
+  let selectedManualEqId = null;
   let eqRef, resRef, pplRef;
 
   function getWeekStart(d){
@@ -443,7 +446,7 @@ const firebaseConfig = {
   async function initFirebaseData(){
     const snap = await eqRef.once('value');
     if (!snap.exists()){
-      const defaults = DEFAULT_NAMES.map((name, i) => ({ id: 'eq'+(i+1), tag: 'EQ-0'+(i+1), name }));
+      const defaults = DEFAULT_NAMES.map((name, i) => ({ id: 'eq'+(i+1), tag: 'EQ-0'+(i+1), name, manualUrl: DEFAULT_MANUAL_URL }));
       await eqRef.set(defaults);
     }
   }
@@ -460,6 +463,12 @@ const firebaseConfig = {
         equipment.every((e,i) => e.name === OLD_DEFAULT_NAMES[i]);
       if (isOldDefault){
         equipment.forEach((e,i) => { e.name = DEFAULT_NAMES[i]; });
+        eqRef.set(equipment);
+        return;
+      }
+      const needsManualDefault = equipment.some(e => !e.manualUrl);
+      if (needsManualDefault){
+        equipment.forEach(e => { if (!e.manualUrl) e.manualUrl = DEFAULT_MANUAL_URL; });
         eqRef.set(equipment);
         return;
       }
@@ -523,6 +532,7 @@ const firebaseConfig = {
       const badge = eqStatusLabel(eq);
       const unavailable = !!badge;
       html += '<tr><td class="eqbk-eqname"><span class="eqbk-eq-tag eqbk-eq-tag-btn" data-eqid="'+eq.id+'" title="눌러서 장비 상태 변경">'+eq.tag+'</span><span class="eqbk-eq-name" data-eqid="'+eq.id+'" title="눌러서 이름 수정">'+eq.name+'</span>'
+        + (eq.manualUrl ? '<span class="eqbk-manual-link" data-manual-eqid="'+eq.id+'" title="사용 매뉴얼 보기">📄</span>' : '')
         + (badge ? ' <span class="eqbk-status-badge eqbk-status-'+eq.status+'">'+badge+'</span>' : '') + '</td>';
       for (let d=1; d<=daysInMonth; d++){
         const dt = new Date(year, month, d);
@@ -571,6 +581,7 @@ const firebaseConfig = {
       const badge = eqStatusLabel(eq);
       const unavailable = !!badge;
       html += '<tr><td class="eqbk-eqname"><span class="eqbk-eq-tag eqbk-eq-tag-btn" data-eqid="'+eq.id+'" title="눌러서 장비 상태 변경">'+eq.tag+'</span><span class="eqbk-eq-name" data-eqid="'+eq.id+'" title="눌러서 이름 수정">'+eq.name+'</span>'
+        + (eq.manualUrl ? '<span class="eqbk-manual-link" data-manual-eqid="'+eq.id+'" title="사용 매뉴얼 보기">📄</span>' : '')
         + (badge ? ' <span class="eqbk-status-badge eqbk-status-'+eq.status+'">'+badge+'</span>' : '') + '</td>';
       days.forEach(dt => {
         const isToday = dt.toDateString() === today.toDateString();
@@ -601,6 +612,24 @@ const firebaseConfig = {
     return html;
   }
 
+  function buildManualViewHtml(){
+    if (!selectedManualEqId && equipment[0]) selectedManualEqId = equipment[0].id;
+    const eq = equipment.find(e=>e.id===selectedManualEqId) || equipment[0];
+    let html = '<div class="eqbk-panel" style="padding:14px;">';
+    html += '<label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">장비 선택</label>';
+    html += '<select id="eqbk-manual-select">';
+    equipment.forEach(e => html += '<option value="'+e.id+'" '+(eq&&e.id===eq.id?'selected':'')+'>'+e.name+'</option>');
+    html += '</select>';
+    if (eq && eq.manualUrl){
+      html += '<iframe src="'+eq.manualUrl+'" style="width:100%;height:72vh;border:1px solid var(--border);border-radius:8px;margin-top:12px;background:#fff;"></iframe>';
+      html += '<div style="margin-top:8px;"><a href="'+eq.manualUrl+'" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--muted);text-decoration:underline;">새 탭에서 크게 보기 ↗</a></div>';
+    } else {
+      html += '<div class="eqbk-empty" style="margin-top:16px;">이 장비에 등록된 매뉴얼이 없어요. 장비 이름 옆 태그(EQ-0N)를 눌러 매뉴얼 링크를 추가할 수 있어요.</div>';
+    }
+    html += '</div>';
+    return html;
+  }
+
   function render(){
     const app = document.getElementById('eqbk-app');
     const year = viewDate.getFullYear();
@@ -616,21 +645,33 @@ const firebaseConfig = {
     html += '<div class="eqbk-nav">';
     html += '<button class="eqbk-mode-btn '+(viewMode==='month'?'eqbk-mode-active':'')+'" id="eqbk-mode-month">월간 요약</button>';
     html += '<button class="eqbk-mode-btn '+(viewMode==='week'?'eqbk-mode-active':'')+'" id="eqbk-mode-week">주간 상세</button>';
+    html += '<button class="eqbk-mode-btn '+(viewMode==='manual'?'eqbk-mode-active':'')+'" id="eqbk-mode-manual">📄 매뉴얼</button>';
     if (viewMode === 'month'){
       html += '<button id="eqbk-prev">← 이전달</button>';
       html += '<div class="eqbk-month-label">'+year+'년 '+(month+1)+'월</div>';
       html += '<button id="eqbk-next">다음달 →</button>';
       html += '<button id="eqbk-today2">오늘</button>';
-    } else {
+    } else if (viewMode === 'week') {
       const weekEnd = new Date(weekAnchor); weekEnd.setDate(weekEnd.getDate()+6);
       const wLabel = (weekAnchor.getMonth()+1)+'/'+weekAnchor.getDate()+' – '+(weekEnd.getMonth()+1)+'/'+weekEnd.getDate();
       html += '<button id="eqbk-week-prev">← 지난주</button>';
       html += '<div class="eqbk-month-label">'+wLabel+'</div>';
       html += '<button id="eqbk-week-next">다음주 →</button>';
       html += '<button id="eqbk-week-today">이번주</button>';
+    } else {
+      html += '<div class="eqbk-month-label">장비 매뉴얼</div>';
     }
     html += '<button class="eqbk-add-btn" id="eqbk-new-top">+ 예약 추가</button>';
     html += '</div>';
+
+    if (viewMode === 'manual'){
+      html += buildManualViewHtml();
+      html += '<button class="eqbk-fab" id="eqbk-fab" title="예약 추가">+</button>';
+      if (modalState) html += renderModal();
+      app.innerHTML = html;
+      attachHandlers();
+      return;
+    }
 
     html += '<div class="eqbk-panel"><div class="eqbk-scroll">';
     if (viewMode === 'month') html += buildMonthTableHtml(year, month, daysInMonth, today, isThisMonth);
@@ -714,7 +755,7 @@ const firebaseConfig = {
     if (modalState.mode === 'day'){
       const eq = equipment.find(e=>e.id===modalState.equipmentId);
       const list = reservationsForEquipmentOnDay(modalState.equipmentId, new Date(modalState.dateStr));
-      html += '<h2>'+(eq?eq.name:'')+'</h2><div class="eqbk-modal-sub">'+modalState.dateStr+'</div>';
+      html += '<h2>'+(eq?eq.name:'')+(eq&&eq.manualUrl?' <span class="eqbk-manual-link" data-manual-eqid="'+eq.id+'" title="사용 매뉴얼 보기">📄</span>':'')+'</h2><div class="eqbk-modal-sub">'+modalState.dateStr+'</div>';
       html += '<div class="eqbk-existing-list">';
       if (list.length === 0) html += '<div class="eqbk-empty">이 날짜에 예약이 없어요</div>';
       list.forEach(r => {
@@ -758,9 +799,11 @@ const firebaseConfig = {
     const eq = equipment.find(e=>e.id===modalState.equipmentId);
     const current = (eq && eq.status) || 'ok';
     const currentNote = (eq && eq.statusNote) || '';
+    const currentManual = (eq && eq.manualUrl) || '';
     let html = '<div class="eqbk-overlay" id="eqbk-overlay"><div class="eqbk-modal">';
     html += '<button class="eqbk-modal-close" id="eqbk-modal-close">✕</button>';
-    html += '<h2>'+(eq?eq.name:'')+' 상태 변경</h2><div class="eqbk-modal-sub">'+(eq?eq.tag:'')+'</div>';
+    html += '<h2>'+(eq?eq.name:'')+' 설정</h2><div class="eqbk-modal-sub">'+(eq?eq.tag:'')+'</div>';
+    html += '<label>가동 상태</label>';
     html += '<div class="eqbk-status-choice-group">';
     html += '<div class="eqbk-status-choice'+(current==='ok'?' eqbk-status-choice-active':'')+'" data-status-choice="ok">✅ 정상</div>';
     html += '<div class="eqbk-status-choice'+(current==='maintenance'?' eqbk-status-choice-active':'')+'" data-status-choice="maintenance">🔧 점검중</div>';
@@ -769,6 +812,9 @@ const firebaseConfig = {
     html += '<input type="hidden" id="eqbk-status-value" value="'+current+'">';
     html += '<label>메모 (선택)</label><input id="eqbk-status-note" placeholder="예: 히터 교체중, 재입고 대기" value="'+currentNote+'">';
     html += '<div class="eqbk-hint" style="margin-top:8px;">점검중/고장 상태인 장비는 새 예약이 자동으로 막혀요.</div>';
+    html += '<label style="margin-top:14px;">사용 매뉴얼 링크 (선택)</label>';
+    html += '<input id="eqbk-status-manual" placeholder="예: manuals/furnace1.pdf 또는 https://..." value="'+currentManual+'">';
+    html += '<div class="eqbk-hint">저장하면 장비 이름 옆에 📄 아이콘이 생기고, 누르면 새 탭에서 매뉴얼이 열려요.</div>';
     html += '<div class="eqbk-modal-actions">';
     html += '<button class="eqbk-btn-secondary" id="eqbk-modal-cancel">취소</button>';
     html += '<button class="eqbk-btn-primary" id="eqbk-status-save">저장</button>';
@@ -780,6 +826,17 @@ const firebaseConfig = {
     const q = sel => document.getElementById(sel);
     if (q('eqbk-mode-month')) q('eqbk-mode-month').onclick = () => { viewMode = 'month'; render(); };
     if (q('eqbk-mode-week')) q('eqbk-mode-week').onclick = () => { viewMode = 'week'; weekAnchor = getWeekStart(viewDate); render(); };
+    if (q('eqbk-mode-manual')) q('eqbk-mode-manual').onclick = () => { viewMode = 'manual'; render(); };
+    if (q('eqbk-manual-select')) q('eqbk-manual-select').onchange = () => { selectedManualEqId = q('eqbk-manual-select').value; render(); };
+    document.querySelectorAll('.eqbk-manual-link').forEach(el => {
+      el.onclick = (ev) => {
+        ev.stopPropagation();
+        selectedManualEqId = el.getAttribute('data-manual-eqid');
+        viewMode = 'manual';
+        modalState = null;
+        render();
+      };
+    });
     if (q('eqbk-prev')) q('eqbk-prev').onclick = () => { viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth()-1, 1); render(); };
     if (q('eqbk-next')) q('eqbk-next').onclick = () => { viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth()+1, 1); render(); };
     if (q('eqbk-today2')) q('eqbk-today2').onclick = () => { viewDate = new Date(); render(); };
@@ -841,6 +898,7 @@ const firebaseConfig = {
         if (eq){
           eq.status = q('eqbk-status-value').value;
           eq.statusNote = q('eqbk-status-note').value.trim();
+          eq.manualUrl = q('eqbk-status-manual').value.trim();
           await saveEquipment();
         }
         modalState = null;
