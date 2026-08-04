@@ -499,7 +499,8 @@ const firebaseConfig = {
     if (r.endedAt) return 'ended';
     const now = new Date();
     if (now < new Date(r.start)) return 'scheduled';
-    return 'active'; // within or past the reserved window but not manually ended
+    if (now > new Date(r.end)) return 'ended'; // reserved time has passed, auto-mark as ended
+    return 'active';
   }
   function statusLabel(status){
     if (status === 'ended') return '사용종료';
@@ -1033,6 +1034,7 @@ const firebaseConfig = {
       pplRef = db.ref('people');
       await initFirebaseData();
       attachListeners();
+      setInterval(() => { if (!modalState) render(); }, 60000);
     } catch(e){
       console.error('Firebase init failed', e);
       const app = document.getElementById('eqbk-app');
